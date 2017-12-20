@@ -17,6 +17,9 @@
   <ItemGroup>
     <ClCompile Include="offTranslator.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\animCubeNode\offTranslator.mel" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{8D386D6C-B257-49E0-BAF6-A6EA610AFA23}</ProjectGuid>
@@ -35,7 +38,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
