@@ -62,17 +62,17 @@
 		return MS::kFailure;		\
 			}
 
-
 //This is the backbone for creating a MPxFileTranslator
 class OffTranslator : public MPxFileTranslator {
 public:
-	static MObject	time;
-	static MObject	outputMesh;
-	static  MStatus initialize();
+
 	//Constructor
 	OffTranslator() {};
 	//Destructor
 	virtual            ~OffTranslator() {};
+	static MObject	time;
+	static MObject	outputMesh;
+	static  MStatus initialize();
 
 	//This tells maya that the translator can read files.
 	//Basically, you can import or load with your translator.
@@ -134,6 +134,9 @@ private:
 
 
 };
+
+MObject OffTranslator::time;
+MObject OffTranslator::outputMesh;
 
 //Creates one instance of the OffTranslator
 void* OffTranslator::creator()
@@ -246,11 +249,15 @@ MStatus OffTranslator::reader(const MFileObject& file,
 	faceConnects = (face_connects, numFacesConnect);
 	inputfile.close();
 
+	/* Get time *//*
+	MDataHandle timeData = data.inputValue(time, &rval);
+	McheckErr(returnStatus, "Error getting time data handle\n");
+	MTime time = timeData.asTime();*/
+	//createMesh(time.kNullObj, MObject::kNullObj, rval);
 	return rval;
 }
 
 MObject OffTranslator::createMesh(const MTime& time, MObject& outData, MStatus& stat)
-
 {
 	MFnMesh			meshFS;
 
@@ -426,16 +433,14 @@ MStatus OffTranslator::initialize(){
 
 	MStatus returnStatus;
 	
-	OffTranslator::time = unitAttr.create("time", "tm",
-	MFnUnitAttribute::kTime,
-	0.0, &returnStatus);
+	OffTranslator::time = unitAttr.create("time", "tm", MFnUnitAttribute::kTime, 0.0, &returnStatus);
 	McheckErr(returnStatus, "ERROR creating OffTranslator time attribute\n");
 
 
 	OffTranslator::outputMesh = typedAttr.create("outputMesh", "out", MFnData::kMesh, &returnStatus);
 	McheckErr(returnStatus, "ERROR creating OffTranslator output attribute\n");
 	typedAttr.setStorable(false);
-	
+	/*
 	returnStatus = addAttribute(OffTranslator::time);
 	McheckErr(returnStatus, "ERROR adding time attribute\n");
 
@@ -444,10 +449,11 @@ MStatus OffTranslator::initialize(){
 
 	returnStatus = attributeAffects(OffTranslator::time, OffTranslator::outputMesh);
 	McheckErr(returnStatus, "ERROR in attributeAffects\n");
-	
+	*/
 	return MS::kSuccess;
 
 }
+
 
 MStatus initializePlugin(MObject obj)
 {
