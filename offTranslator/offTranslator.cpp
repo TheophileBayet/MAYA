@@ -130,7 +130,6 @@ private:
 	MFloatPointArray points;
 	MIntArray faceCounts;
 	MIntArray	faceConnects;
-	MObject createMesh(const MTime& time, MObject& outData, MStatus& stat);
 
 
 };
@@ -218,12 +217,14 @@ MStatus OffTranslator::reader(const MFileObject& file,
 			return MS::kFailure;
 		}
 		ligne.set(buf);
+		liste.clear();
 		ligne.split(' ', liste);
 		x = liste[0].asFloat();
 		y = liste[1].asFloat();
 		z = liste[2].asFloat();
 		// Créer le point correspondant : 
 		points.append(MFloatPoint(x, y, z));
+		//cerr << " point : " << x << " ; " << y << " : " << z << " \n";
 	}
 
 	for (int i = 0; i < num_faces; i++){
@@ -232,7 +233,9 @@ MStatus OffTranslator::reader(const MFileObject& file,
 			cerr << "file " << fname << " did not contain as many vertices as said \n";
 			return MS::kFailure;
 		}
+		//inputfile.getline(buf, maxLineSize);
 		ligne.set(buf);
+		liste.clear();
 		ligne.split(' ', liste);
 		nbr_pts.append(liste[0].asInt());
 		face1 = liste[1].asInt();
@@ -241,32 +244,31 @@ MStatus OffTranslator::reader(const MFileObject& file,
 		face_connects.append(liste[1].asInt());
 		face_connects.append(liste[2].asInt());
 		face_connects.append(liste[3].asInt());
-
 	}
-	faceCounts = (nbr_pts, num_faces);
-	int numFacesConnect = 3 * num_faces;
-	// TODO : corriger la ligne du dessus pour prendre en compte autre chose que des triangles.
-	faceConnects = (face_connects, numFacesConnect);
-	inputfile.close();
 
-	/* Get time *//*
-	MDataHandle timeData = data.inputValue(time, &rval);
-	McheckErr(returnStatus, "Error getting time data handle\n");
-	MTime time = timeData.asTime();*/
-	//createMesh(time.kNullObj, MObject::kNullObj, rval);
+	// TODO : corriger la ligne du dessus pour prendre en compte autre chose que des triangles.
+	faceCounts = nbr_pts;
+	faceConnects = face_connects;
+	inputfile.close();
+	MFnMesh			meshFS;
+	/*cerr << " num vertices : " << num_vertices;
+	cerr << " num faces : " << num_faces;
+	cerr << " points : " << points;
+	cerr << " faceCounts : " << faceCounts;
+	cerr << " faceConnects : " << faceConnects ;*/
+	meshFS.create(num_vertices, num_faces,
+		points, faceCounts, faceConnects,
+		MObject::kNullObj, NULL);
+	points.clear();
+	faceCounts.clear();
+	faceConnects.clear();
+	numList.clear();
+	liste.clear();
+	ligne.clear();
 	return rval;
 }
 
-MObject OffTranslator::createMesh(const MTime& time, MObject& outData, MStatus& stat)
-{
-	MFnMesh			meshFS;
 
-	MObject newMesh = meshFS.create(num_vertices, num_faces,
-		points, faceCounts, faceConnects,
-		outData, &stat);
-
-	return newMesh;
-}
 
 // The currently recognised primitives.
 const char* primitiveStrings[] = {
@@ -432,7 +434,7 @@ MStatus OffTranslator::initialize(){
 	MFnTypedAttribute typedAttr;
 
 	MStatus returnStatus;
-	
+	/*
 	OffTranslator::time = unitAttr.create("time", "tm", MFnUnitAttribute::kTime, 0.0, &returnStatus);
 	McheckErr(returnStatus, "ERROR creating OffTranslator time attribute\n");
 
@@ -440,6 +442,7 @@ MStatus OffTranslator::initialize(){
 	OffTranslator::outputMesh = typedAttr.create("outputMesh", "out", MFnData::kMesh, &returnStatus);
 	McheckErr(returnStatus, "ERROR creating OffTranslator output attribute\n");
 	typedAttr.setStorable(false);
+	*/
 	/*
 	returnStatus = addAttribute(OffTranslator::time);
 	McheckErr(returnStatus, "ERROR adding time attribute\n");
