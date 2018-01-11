@@ -34,6 +34,8 @@
 #include <maya/MFnMeshData.h>
 #include <maya/MIOStream.h>
 
+#using namespace std
+
 class Green : public MPxNode
 {
 public:
@@ -44,8 +46,8 @@ public:
 	static  MStatus initialize();
 	/*static MObject    outputMesh;
 	static MObject    inputMesh;
-	static MObject    inputCage;
-	static MTypeId    id;*/
+	static MObject    inputCage;*/
+	static MTypeId    id;
 protected:
 	//void createMesh(MObject& outData, MStatus& stat);
 	void calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi);
@@ -147,3 +149,48 @@ double Green::GCTriInt(MFloatVector p, MFloatVector v1, MFloatVector v2, MFloatV
 	return res;
 }
 
+// This function works for one given interior point eta
+void calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi){
+	// Initialization
+	Phi.clear();
+	Psi.clear();
+	// Loop over the faces
+	for (MItMeshPolygon j = Cagefaces.reset(); j.isDone() != true; j.next()){
+		MFloatVectorArray vect = MFloatVectorArray();
+		for (MItMeshFaceVertex i = MItMeshFaceVertex(j); i.isDone() != true; i.next()){
+			vect.append(i);
+		}
+		for (int i = 0; i < 3; i++){
+			vect[i] = vect[i] - eta;
+		}
+		MFloatVector n;
+		j.getNormal(n);
+		MFloatVector p = dot(vect[0], n) * n;
+		MFloatArray s = MFloatArray();
+		MFloatArray first = MFloatArray();
+		MFloatArray second = MFloatArray();
+		MFloatVectorArray q = MFloatVectorArray();
+		MFloatVectorArray norm = MFloatVectorArray();
+		for (int i = 0; i < 3; i++){
+			s[i] = dot(cross(vect[i] - p, vect[i + 1] - p), n);
+			s[i] = s[i] / abs(s[i]);
+			first = GCTriInt(p, vect[i], vect[i + 1], 0);
+			second = GCTriInt(0, vect[i], vect[i + 1], 0);
+			q[i] = cross(vect[i + 1], vect[i]);
+			norm[i] = q[i] / q[i].length();
+		}
+		double I = 0;
+		for (int i = 0; i < 3; i++){
+			I += s[i] * first[i];
+		}
+		I = -abs(I);
+		Psi[j.index()] = -I;
+		MFloatVector w = n*I;
+		for (int i = 0; i < 3; i++){
+			w += norm[i] * second[i];
+		}
+		for (int i = 0; i < 3; i++){
+			double tmp = dot(norm[i + 1], w) / dot(norm[i + 1], vect[i]);
+			j.vertexIndex();
+	}
+}
