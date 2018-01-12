@@ -23,11 +23,13 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MPxManipContainer.h>
+#include <maya/MItMeshPolygon.h>
+#include <maya/MItMeshFaceVertex.h>
 #include <maya/MManipData.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MModelMessage.h>
 #include <maya/MItSelectionList.h>
-
+#include <maya/MPointArray.h>
 #include <maya/MPxNode.h>
 #include <maya/MObject.h>
 #include <maya/MPlug.h>
@@ -60,6 +62,10 @@ public:
 	static MTypeId	id;
 
 protected:
+	//void createMesh(MObject& outData, MStatus& stat);
+	void calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi);
+	//void recalcMesh(MObject& outData, MFloatPointArray inputMeshPoints, MFloatPointArray CagePoints, MFloatVectorArray CageNormals, MItMeshPolygon Cagefaces, MStatus& stat);
+	double GCTriInt(MVector p, MVector v1, MVector v2, MFloatVector eta);
 	MObject createMesh(const MTime& time, MObject& outData, MStatus& stat);
 };
 
@@ -229,4 +235,78 @@ MStatus uninitializePlugin(MObject obj)
 	}
 
 	return status;
+}
+
+double cageHandler::GCTriInt(MVector p, MVector v1, MVector v2, MFloatVector eta){
+	MFloatVector first = v2 - v1;
+	MFloatVector second = p - v1;
+	MFloatVector third = v2 - p;
+	MFloatVector fourth = v1 - p;
+	MFloatVector fifth = p - eta;
+	double alpha = (first*second) / (first.length()*second.length());
+	alpha = acos(alpha);
+	double beta = (third*fourth) / (third.length()*fourth.length());
+	double lambda = second.length()*second.length() * sin(alpha)*sin(alpha);
+	double c = fifth.length()*fifth.length();
+	double theta1 = M_PI - alpha;
+	double theta2 = M_PI - alpha - beta;
+	double S1 = sin(theta1);
+	double S2 = sin(theta2);
+	double C1 = cos(theta1);
+	double C2 = cos(theta2);
+	double I1 = 2 * sqrt(c) * atan((sqrt(c)*C1) / (sqrt(lambda + S1*S1*c)));
+	I1 += sqrt(lambda) * log(((2 * sqrt(lambda)*S1*S1) / ((1 - C1)*(1 - C1))) * (1 - ((2 * c*C1) / (c*(1 + C1) + lambda + sqrt(lambda*lambda + lambda*c*S1*S1)))));
+	I1 = I1 * (-S1 / (2 * abs(S1)));
+	double I2 = 2 * sqrt(c) * atan((sqrt(c)*C2) / (sqrt(lambda + S2*S2*c)));
+	I2 += sqrt(lambda) * log(((2 * sqrt(lambda)*S2*S2) / ((1 - C2)*(1 - C2))) * (1 - ((2 * c*C2) / (c*(1 + C2) + lambda + sqrt(lambda*lambda + lambda*c*S2*S2)))));
+	I2 = I2 * (-S2 / (2 * abs(S2)));
+	float res = I1 - I2 - sqrt(c)*beta;
+	res = abs(res);
+	res = res * (-1 / (4 * M_PI));
+	return res;
+}
+
+void cageHandler::calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi){
+	// Initialization
+	Phi.clear();
+	Psi.clear();
+	// Loop over the faces
+	MPointArray listPoint;
+	for (Cagefaces.reset(); Cagefaces.isDone() != true; Cagefaces.next()){
+		MFloatVectorArray vect = MFloatVectorArray();
+		Cagefaces.getPoints(listPoint);
+		for (int i = 0; i < 3; i++){
+			listPoint[i] = listPoint[i] - MPoint(eta);
+		}
+		MVector n;
+		Cagefaces.getNormal(n);
+		MVector p = (MVector(listPoint[0])* n) * n;
+		MFloatArray s = MFloatArray();
+		MFloatArray first = MFloatArray();
+		MFloatArray second = MFloatArray();
+		MFloatVectorArray q = MFloatVectorArray();
+		MFloatVectorArray norm = MFloatVectorArray();
+		MFloatVector zero = MFloatVector(0, 0);
+		for (int i = 0; i < 3; i++){
+			s[i] = (MVector(listPoint[i] - p) ^ MVector(listPoint[i + 1] - p))* n;
+			s[i] = s[i] / abs(s[i]);
+			first[i] = GCTriInt(p, listPoint[i], listPoint[i + 1], zero);
+			second[i] = GCTriInt(zero, listPoint[i], listPoint[i + 1], zero);
+			q[i] = MVector(listPoint[i + 1]) ^ MVector(listPoint[i]);
+			norm[i] = q[i] / q[i].length();
+		}
+		double I = 0;
+		for (int i = 0; i < 3; i++){
+			I += s[i] * first[i];
+		}
+		I = -abs(I);
+		Psi[Cagefaces.index()] = -I;
+		MFloatVector w = n*I;
+		for (int i = 0; i < 3; i++){
+			w += norm[i] * second[i];
+		}
+		for (int i = 0; i < 3; i++){
+			double tmp = (norm[i + 1] * w) / (norm[i + 1] * listPoint[i]);
+		}
+	}
 }

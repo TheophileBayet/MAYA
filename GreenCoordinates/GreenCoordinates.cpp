@@ -23,6 +23,7 @@
 #include <maya/MFloatVectorArray.h>
 #include <maya/MIntArray.h>
 #include <maya/MItMeshPolygon.h>
+#include <maya/MItMeshFaceVertex.h>
 #include <maya/MDoubleArray.h>
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MFnTypedAttribute.h>
@@ -34,7 +35,7 @@
 #include <maya/MFnMeshData.h>
 #include <maya/MIOStream.h>
 
-#using namespace std
+//#using namespace std
 
 class Green : public MPxNode
 {
@@ -44,15 +45,15 @@ public:
 	virtual MStatus compute(const MPlug& plug, MDataBlock& data);
 	static  void*    creator();
 	static  MStatus initialize();
-	/*static MObject    outputMesh;
+	static MObject    outputMesh;
 	static MObject    inputMesh;
-	static MObject    inputCage;*/
+	static MObject    inputCage;
 	static MTypeId    id;
 protected:
 	//void createMesh(MObject& outData, MStatus& stat);
 	void calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi);
 	//void recalcMesh(MObject& outData, MFloatPointArray inputMeshPoints, MFloatPointArray CagePoints, MFloatVectorArray CageNormals, MItMeshPolygon Cagefaces, MStatus& stat);
-	double GCTriInt(MFloatVector p, MFloatVector v1, MFloatVector v2, MFloatVector eta);
+	double GCTriInt(MVector p, MVector v1, MVector v2, MFloatVector eta);
 	//MObject createCage(MObject inputCage, MObject& outData, MStatus& stat);
 	// Helpers
 	/*MObject createQuads(const MFloatPointArray& points, MObject& outData, MStatus& stat);
@@ -73,24 +74,24 @@ MStatus Green::initialize()
 	Green::outputMesh = typedAttr.create("outputMesh", "out",
 		MFnData::kMesh,
 		&returnStatus);
-	McheckErr(returnStatus, "ERROR creating Green output attribute\n");
+	//McheckErr(returnStatus, "ERROR creating Green output attribute\n");
 	//typedAttr.setStorable(false);
 	Green::inputMesh = typedAttr.create("inputMesh", "inM",
 		MFnData::kMesh,
 		&returnStatus);
-	McheckErr(returnStatus, "ERROR creating Green output attribute\n");
+	//McheckErr(returnStatus, "ERROR creating Green output attribute\n");
 	//typedAttr.setStorable(false);
 	Green::inputCage = typedAttr.create("inputCage", "inC",
 		MFnData::kMesh,
 		&returnStatus);
-	McheckErr(returnStatus, "ERROR creating Green output attribute\n");
+	//McheckErr(returnStatus, "ERROR creating Green output attribute\n");
 	//typedAttr.setStorable(false);
 	returnStatus = addAttribute(Green::inputMesh);
-	McheckErr(returnStatus, "ERROR adding inputMesh attribute\n");
+	//McheckErr(returnStatus, "ERROR adding inputMesh attribute\n");
 	returnStatus = addAttribute(Green::inputCage);
-	McheckErr(returnStatus, "ERROR adding inputCage attribute\n");
+	//McheckErr(returnStatus, "ERROR adding inputCage attribute\n");
 	returnStatus = addAttribute(Green::outputMesh);
-	McheckErr(returnStatus, "ERROR adding outputMesh attribute\n");
+	//McheckErr(returnStatus, "ERROR adding outputMesh attribute\n");
 	attributeAffects(inputCage, outputMesh);
 	attributeAffects(inputMesh, outputMesh);
 	return MS::kSuccess;
@@ -120,7 +121,7 @@ MStatus uninitializePlugin(MObject obj)
 	return status;
 }
 
-double Green::GCTriInt(MFloatVector p, MFloatVector v1, MFloatVector v2, MFloatVector eta){
+double Green::GCTriInt(MVector p, MVector v1, MVector v2, MFloatVector eta){
 	MFloatVector first = v2 - v1;
 	MFloatVector second = p - v1;
 	MFloatVector third = v2 - p;
@@ -130,7 +131,7 @@ double Green::GCTriInt(MFloatVector p, MFloatVector v1, MFloatVector v2, MFloatV
 	alpha = acos(alpha);
 	double beta = (third*fourth) / (third.length()*fourth.length());
 	double lambda = second.length()*second.length() * sin(alpha)*sin(alpha);
-	double c = fifth.lenght()*fifth.length();
+	double c = fifth.length()*fifth.length();
 	double theta1 = M_PI - alpha;
 	double theta2 = M_PI - alpha - beta;
 	double S1 = sin(theta1);
@@ -138,45 +139,44 @@ double Green::GCTriInt(MFloatVector p, MFloatVector v1, MFloatVector v2, MFloatV
 	double C1 = cos(theta1);
 	double C2 = cos(theta2);
 	double I1 = 2 * sqrt(c) * atan((sqrt(c)*C1)/(sqrt(lambda+S1*S1*c)));
-	I1 += sqrt(lamba) * log( ((2*sqrt(lambda)*S1*S1)/((1-C1)*(1-C1))) * (1 - ((2*c*C1) / (c*(1+C1)+lambda+sqrt(lambda*lambda+lambda*c*S1*S1)))) );
+	I1 += sqrt(lambda) * log( ((2*sqrt(lambda)*S1*S1)/((1-C1)*(1-C1))) * (1 - ((2*c*C1) / (c*(1+C1)+lambda+sqrt(lambda*lambda+lambda*c*S1*S1)))) );
 	I1 = I1 * (-S1 / (2 * abs(S1)));
 	double I2 = 2 * sqrt(c) * atan((sqrt(c)*C2) / (sqrt(lambda + S2*S2*c)));
-	I2 += sqrt(lamba) * log(((2 * sqrt(lambda)*S2*S2) / ((1 - C2)*(1 - C2))) * (1 - ((2 * c*C2) / (c*(1 + C2) + lambda + sqrt(lambda*lambda + lambda*c*S2*S2)))));
+	I2 += sqrt(lambda) * log(((2 * sqrt(lambda)*S2*S2) / ((1 - C2)*(1 - C2))) * (1 - ((2 * c*C2) / (c*(1 + C2) + lambda + sqrt(lambda*lambda + lambda*c*S2*S2)))));
 	I2 = I2 * (-S2 / (2 * abs(S2)));
-	res = I1 - I2 - sqrt(c)*beta;
+	float res = I1 - I2 - sqrt(c)*beta;
 	res = abs(res);
 	res = res * (-1 / (4 * M_PI));
 	return res;
 }
 
-// This function works for one given interior point eta
-void calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi){
+void Green::calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFloatVector eta, MFloatArray &Phi, MFloatArray &Psi){
 	// Initialization
 	Phi.clear();
 	Psi.clear();
 	// Loop over the faces
-	for (MItMeshPolygon j = Cagefaces.reset(); j.isDone() != true; j.next()){
+	MPointArray listPoint;
+	for (Cagefaces.reset(); Cagefaces.isDone() != true; Cagefaces.next()){
 		MFloatVectorArray vect = MFloatVectorArray();
-		for (MItMeshFaceVertex i = MItMeshFaceVertex(j); i.isDone() != true; i.next()){
-			vect.append(i);
-		}
+		Cagefaces.getPoints(listPoint);
 		for (int i = 0; i < 3; i++){
-			vect[i] = vect[i] - eta;
+			listPoint[i] = listPoint[i] - MPoint(eta);
 		}
-		MFloatVector n;
-		j.getNormal(n);
-		MFloatVector p = dot(vect[0], n) * n;
+		MVector n;
+		Cagefaces.getNormal(n);
+		MVector p = (MVector(listPoint[0])* n) * n;
 		MFloatArray s = MFloatArray();
 		MFloatArray first = MFloatArray();
 		MFloatArray second = MFloatArray();
 		MFloatVectorArray q = MFloatVectorArray();
 		MFloatVectorArray norm = MFloatVectorArray();
+		MFloatVector zero = MFloatVector(0, 0);
 		for (int i = 0; i < 3; i++){
-			s[i] = dot(cross(vect[i] - p, vect[i + 1] - p), n);
+			s[i] = (MVector(listPoint[i] - p) ^ MVector(listPoint[i + 1] - p))* n;
 			s[i] = s[i] / abs(s[i]);
-			first = GCTriInt(p, vect[i], vect[i + 1], 0);
-			second = GCTriInt(0, vect[i], vect[i + 1], 0);
-			q[i] = cross(vect[i + 1], vect[i]);
+			first = GCTriInt(p, listPoint[i], listPoint[i + 1], zero);
+			second = GCTriInt(zero, listPoint[i], listPoint[i + 1], zero);
+			q[i] = MVector(listPoint[i + 1]) ^ MVector(listPoint[i]);
 			norm[i] = q[i] / q[i].length();
 		}
 		double I = 0;
@@ -184,13 +184,13 @@ void calcWeights(MFloatPointArray inputMeshPoints, MItMeshPolygon Cagefaces, MFl
 			I += s[i] * first[i];
 		}
 		I = -abs(I);
-		Psi[j.index()] = -I;
+		Psi[Cagefaces.index()] = -I;
 		MFloatVector w = n*I;
 		for (int i = 0; i < 3; i++){
 			w += norm[i] * second[i];
 		}
 		for (int i = 0; i < 3; i++){
-			double tmp = dot(norm[i + 1], w) / dot(norm[i + 1], vect[i]);
-			j.vertexIndex();
+			double tmp = (norm[i + 1]* w) / (norm[i + 1]* listPoint[i]);
+		}
 	}
 }
