@@ -1,0 +1,20 @@
+// tux 
+
+CreatePolygonCube;
+polyCube -w 1 -h 1 -d 1 -sx 1 -sy 1 -sz 1 -ax 0 1 0 -cuv 4 -ch 1;
+move -r 0 0 0.423774 ;
+select -r pCube1 ;
+doDelete;
+setAttr "polyCube2.width" 0.5;
+setAttr "polyCube2.height" 0.4;
+setAttr "polyCube2.subdivisionsDepth" 5;
+select -r pCube2.f[20] ;
+PolyExtrude;
+select -r pCube2.f[20] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx -0.25 -pvy 0 -pvz 0.6237735827 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube2.f[20];
+setAttr "polyExtrudeFace2.localTranslate" -type double3 0 0 0.191184 ;
+select -r pCube2.f[15] ;
+PolyExtrude;
+select -r pCube2.f[15] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 0.25 -pvy 0 -pvz 0.6237735827 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube2.f[15];
+setAttr "polyExtrudeFace3.localTranslate" -type double3 0 0 0.212756 ;

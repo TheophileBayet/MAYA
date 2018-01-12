@@ -1,0 +1,29 @@
+// olaf
+
+CreatePolygonCube;
+polyCube -w 1 -h 1 -d 1 -sx 1 -sy 1 -sz 1 -ax 0 1 0 -cuv 4 -ch 1;
+move -r 44.526148 0 65.199002 ;
+setAttr "polyCube2.width" 35.413158;
+setAttr "polyCube2.height" 71.773158;
+setAttr "polyCube2.depth" 44.024737;
+setAttr "polyCube2.subdivisionsHeight" 9;
+select -r pCube2.f[11:12] ;
+PolyExtrude;
+select -r pCube2.f[11:12] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 44.52614706 -pvy 19.93698883 -pvz 43.1866352 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube2.f[11:12];
+setAttr "polyExtrudeFace2.localTranslate" -type double3 0 0 38.663709 ;
+select -r pCube2.f[6:7] ;
+PolyExtrude;
+select -r pCube2.f[6:7] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 44.52614706 -pvy 19.93698502 -pvz 87.2113697 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube2.f[6:7];
+setAttr "polyExtrudeFace3.localTranslate" -type double3 0 0 40.768434 ;
+select -r pCube2.f[32] ;
+PolyExtrude;
+select -r pCube2.f[32] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 26.8195688 -pvy -7.974794865 -pvz 65.19900245 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube2.f[32];
+setAttr "polyExtrudeFace5.localTranslate" -type double3 0 0 9.357705 ;
+select -r pCube2.f[31] ;
+PolyExtrude;
+select -r pCube2.f[31] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 26.8195688 -pvy -15.94958973 -pvz 65.19900245 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube2.f[31];
+setAttr "polyExtrudeFace7.localTranslate" -type double3 0 0 24.878592 ;

@@ -1,0 +1,21 @@
+// Tux_lowres
+
+CreatePolygonCube;
+polyCube -w 1 -h 1 -d 1 -sx 1 -sy 1 -sz 1 -ax 0 1 0 -cuv 4 -ch 1;
+setAttr "pCube1.scaleX" 5;
+setAttr "pCube1.scaleZ" 4;
+PolyExtrude;
+select -r pCube1.f[3] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 0 -pvy 0 -pvz 0 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube1.f[3];
+setAttr "polyExtrudeFace2.localTranslate" -type double3 0 0 8.40226 ;
+setAttr "polyExtrudeFace2.divisions" 4;
+select -r pCube1.f[20] ;
+PolyExtrude;
+select -r pCube1.f[20] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx -2.5 -pvy -5.751412392 -pvz 0 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube1.f[20];
+setAttr "polyExtrudeFace4.localTranslate" -type double3 0 0 1.884227 ;
+select -r pCube1.f[12] ;
+PolyExtrude;
+select -r pCube1.f[12] ;
+polyExtrudeFacet -constructionHistory 1 -keepFacesTogether 1 -pvx 2.5 -pvy -5.751412392 -pvz 0 -divisions 1 -twist 0 -taper 1 -off 0 -thickness 0 -smoothingAngle 30 pCube1.f[12];
+setAttr "polyExtrudeFace6.localTranslate" -type double3 0 0 2.231914 ;
